@@ -15,43 +15,29 @@
 		</swiper>
 		<!-- 导航条 -->
 		<view class="navs">
-			<navigator v-for="item in CateList" :key="item.name" :open-type="item.open_type || 'navigate'" :url="item.open_type ? '/pages/category/index' : `/subpkg/pages/list/index?query=${item.name}`"><image :src="item.image_src"></image></navigator>
+			<navigator
+				v-for="item in CateList"
+				:key="item.name"
+				:open-type="item.open_type || 'navigate'"
+				:url="item.open_type ? '/pages/category/index' : `/subpkg/pages/list/index?query=${item.name}`"
+			>
+				<image :src="item.image_src"></image>
+			</navigator>
 		</view>
 		<!-- 楼层 -->
 		<view class="floors">
-			<view class="floor">
-				<view class="title"><image src="http://static.botue.com/ugo/uploads/pic_floor01_title.png"></image></view>
+			<view class="floor" v-for="item in floordata" :key="item.floor_title.name">
+				<view class="title"><image :src="item.floor_title.name"></image></view>
 				<view class="items">
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor01_1@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor01_2@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor01_3@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor01_4@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor01_5@2x.png"></image></navigator>
-				</view>
-			</view>
-			<view class="floor">
-				<view class="title"><image src="http://static.botue.com/ugo/uploads/pic_floor02_title.png" /></view>
-				<view class="items">
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor02_1@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor02_2@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor02_3@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor02_4@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor02_5@2x.png"></image></navigator>
-				</view>
-			</view>
-			<view class="floor">
-				<view class="title"><image src="http://static.botue.com/ugo/uploads/pic_floor03_title.png"></image></view>
-				<view class="items">
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor03_1@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor03_2@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor03_3@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor03_4@2x.png"></image></navigator>
-					<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/pic_floor03_5@2x.png"></image></navigator>
+					<navigator 
+					v-for="product in item.product_list" :key="product.name"
+					url="`/subpkg/pages/list/index?query=${product.name}`">
+					<image :src="product.image_src"></image></navigator>
 				</view>
 			</view>
 		</view>
 		<!-- 回到顶部 -->
-		<view class="goTop icon-top"></view>
+		<view class="goTop icon-top" @click="goTop"></view>
 	</view>
 </template>
 
@@ -63,7 +49,8 @@ export default {
 		return {
 			pageHeight: 'auto',
 			swiperList: [],
-			CateList: []
+			CateList: [],
+			floordata:[]
 		};
 	},
 
@@ -74,11 +61,34 @@ export default {
 	onLoad() {
 		this.getList();
 		this.getCategoryList();
+		this.getFloordata();
+	},
+	//监听用户下拉操作
+	async onPullDownRefresh() {
+		uni.showLoading({
+			title:"加载中",
+			mask:true
+		}),
+		setTimeout(function() {
+			uni.hideLoading()
+		}, 500);
+		await this.getList();
+		await this.getCategoryList();
+		await this.getFloordata(); 
+		// 停止下拉交互
+		uni.stopPullDownRefresh()
+		
 	},
 
 	methods: {
 		disableScroll(ev) {
 			this.pageHeight = ev.pageHeight + 'px';
+		},
+		// 返回顶部
+		goTop(){
+			uni.pageScrollTo({
+				scrollTop:50
+			})
 		},
 		async getList() {
 			const { data: res } = await uni.$http.get('/api/public/v1/home/swiperdata');
@@ -104,6 +114,19 @@ export default {
 				});
 			}
 			this.CateList = res.message;
+		},
+		// 获取楼层数据
+		async getFloordata() {
+			const { data: res } = await uni.$http.get('/api/public/v1/home/floordata');
+			console.log(res);
+			if(res.meta.status !== 200 ) {
+				return uni.showToast({
+					title:"获取数据失败",
+					icon:'none'
+				})
+			}
+			this.floordata = res.message
+			
 		}
 	}
 };
