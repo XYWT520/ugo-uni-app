@@ -3,22 +3,19 @@
 		<search @search="disableScroll" />
 		<!-- 焦点图 -->
 		<swiper class="banner" indicator-dots indicator-color="rgba(255, 255, 255, 0.6)" indicator-active-color="#fff">
-			<swiper-item>
-				<navigator url="/subpkg/goods/index/index"><image src="http://static.botue.com/ugo/uploads/banner1.png"></image></navigator>
+			<swiper-item v-for="item in swiperList" :key="item.goods_id">
+				<navigator url="`/subpkg/pages/goods/index?id=${item.goods_id}`"><image :src="item.image_src"></image></navigator>
 			</swiper-item>
-			<swiper-item>
-				<navigator url="/subpkg/goods/index/index"><image src="http://static.botue.com/ugo/uploads/banner2.png"></image></navigator>
+			<!-- <swiper-item>
+				<navigator url="/subpkg/goods/index/index"><image :src="item.image_src"></image></navigator>
 			</swiper-item>
 			<swiper-item>
 				<navigator url="/subpkg/goods/index/index"><image src="http://static.botue.com/ugo/uploads/banner3.png"></image></navigator>
-			</swiper-item>
+			</swiper-item> -->
 		</swiper>
 		<!-- 导航条 -->
 		<view class="navs">
-			<navigator open-type="switchTab" url="/pages/category/index"><image src="http://static.botue.com/ugo/uploads/icon_index_nav_4@2x.png"></image></navigator>
-			<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/icon_index_nav_3@2x.png"></image></navigator>
-			<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/icon_index_nav_2@2x.png"></image></navigator>
-			<navigator url="/subpkg/pages/list/index"><image src="http://static.botue.com/ugo/uploads/icon_index_nav_1@2x.png"></image></navigator>
+			<navigator v-for="item in CateList" :key="item.name" :open-type="item.open_type || 'navigate'" :url="item.open_type ? '/pages/category/index' : `/subpkg/pages/list/index?query=${item.name}`"><image :src="item.image_src"></image></navigator>
 		</view>
 		<!-- 楼层 -->
 		<view class="floors">
@@ -64,7 +61,9 @@ import search from '@/components/search';
 export default {
 	data() {
 		return {
-			pageHeight: 'auto'
+			pageHeight: 'auto',
+			swiperList: [],
+			CateList: []
 		};
 	},
 
@@ -73,18 +72,38 @@ export default {
 	},
 
 	onLoad() {
-		this.getList()
-	}
+		this.getList();
+		this.getCategoryList();
+	},
 
 	methods: {
 		disableScroll(ev) {
 			this.pageHeight = ev.pageHeight + 'px';
 		},
-		async getList(){
-			const res = await uni.request({
-				url:'/api/public/v1/home/swiperdata'
-			}),
-				console.log(res)
+		async getList() {
+			const { data: res } = await uni.$http.get('/api/public/v1/home/swiperdata');
+			console.log(res);
+			// 数据校验
+			if (res.meta.status !== 200) {
+				return uni.showToast({
+					title: '数据加载失败',
+					icon: 'none'
+				});
+			}
+			// 更新数据
+			this.swiperList = res.message;
+		},
+		// 获取分类导航数据
+		async getCategoryList() {
+			const { data: res } = await uni.$http.get('/api/public/v1/home/catitems');
+			console.log(res);
+			if (res.meta.status !== 200) {
+				return uni.showToast({
+					title: '数据加载失败',
+					icon: 'none'
+				});
+			}
+			this.CateList = res.message;
 		}
 	}
 };
