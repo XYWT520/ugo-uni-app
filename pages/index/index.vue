@@ -92,7 +92,7 @@ export default {
 		},
 		async getList() {
 			const { data: res } = await uni.$http.get('/api/public/v1/home/swiperdata');
-			console.log(res);
+			// console.log(res);
 			// 数据校验
 			if (res.meta.status !== 200) {
 				return uni.showToast({
@@ -106,7 +106,7 @@ export default {
 		// 获取分类导航数据
 		async getCategoryList() {
 			const { data: res } = await uni.$http.get('/api/public/v1/home/catitems');
-			console.log(res);
+			// console.log(res);
 			if (res.meta.status !== 200) {
 				return uni.showToast({
 					title: '数据加载失败',
@@ -118,7 +118,7 @@ export default {
 		// 获取楼层数据
 		async getFloordata() {
 			const { data: res } = await uni.$http.get('/api/public/v1/home/floordata');
-			console.log(res);
+			// console.log(res);
 			if(res.meta.status !== 200 ) {
 				return uni.showToast({
 					title:"获取数据失败",
